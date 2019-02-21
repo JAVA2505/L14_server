@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -16,24 +15,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ServerSocket server = new ServerSocket(8888);
-                    while(true){
-                        Socket s = server.accept();
-                        ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
-                        System.out.println("PETR_FAKE: "+ois.readObject());
-                        ois.close();
-                        s.close();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }).start();
         try {
             ServerSocket server = new ServerSocket(8899);
             while(true){
@@ -70,18 +51,20 @@ public class Main {
                                 first.lastIndexOf(WS)+1);
                         if(registeredUsers.containsKey(from)) {
                             System.out.println("FROM: " + from + "; TO: " + to + "; MSG: " + message + ";");
-                            //TODO
-
                         }
-                        /*if("exit".equals(message)){
-                            break;
-                        }*/
+                        if (registeredUsers.containsKey(to)) {
+                            User toUser = registeredUsers.get(to);
+                            try (Socket sock = new Socket(toUser.getIp(), toUser.getPort())) {
+                                ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
+                                oos.writeObject(from + " " + message);
+                                oos.close();
+                            }
+                        }
                     }
                 }
                 ois.close();
                 s.close();
             }
-//            server.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
